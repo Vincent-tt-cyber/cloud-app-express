@@ -11,23 +11,40 @@ const poolPromise = pool.promise();
 
 // Получение всех пользователей с БД
 module.exports.getUsers = async () => {
-  getUsersQuery = "SELECT * FROM `users`";
-  let [rows] = await poolPromise.query(getUsersQuery);
-  return rows;
+  try {
+    getUsersQuery = "SELECT * FROM `users`";
+    let [rows] = await poolPromise.query(getUsersQuery);
+    return rows;
+  } catch (error) {
+    return error;
+  }
 };
 
-module.exports.getLoginUser = async (fullName, email, password) => {
-  getUserLoginQuery =
-    "SELECT `fullName`, `email`, `password`, `avatarUrl` FROM `users` WHERE fullName = ? AND email = ? AND password = ?";
+// Регистрация пользователя
+module.exports.registerUser = async (name, surname, email, password) => {
   try {
-    let [rows] = await poolPromise.query(getUserLoginQuery, [
-      fullName,
+    const registerUserQuery =
+      "INSERT INTO `users`(`name`, `surname`, `email`, `password`) VALUES (?,?,?,?)";
+    let [rows] = await poolPromise.query(registerUserQuery, [
+      name,
+      surname,
       email,
-      password,
+      password, 
     ]);
     return rows;
   } catch (error) {
-    console.log(error);
-    throw error;
+    return error;
+  }
+};
+
+// Проверка пользоателя на авторизацию (имеется ли в БД)
+module.exports.getLoginUser = async (email) => {
+  try {
+    const getUserLoginQuery = "SELECT * FROM `users` WHERE email = ?";
+    let [rows] = await poolPromise.query(getUserLoginQuery, [email]);
+    // console.log("rows => ", rows);
+    return rows;
+  } catch (error) {
+    return error;
   }
 };

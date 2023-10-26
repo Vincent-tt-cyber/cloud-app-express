@@ -18,30 +18,36 @@ const PORT = 3000;
   1 - Создать запрос на регистрацию пользователя в БД.
   2 - СОздать JWT-токен для пользователей при авторизации.
   3 - Создать приватный роутинг для проверки JWT-токена.
+  4 - Проверка приватного роутинга.
 
 */
 
 // Роут на регистрацию нового пользователя
-app.post("/register", (req, res) => {
+app.post("/register", async (req, res) => {
   try {
-    const { userName, userSurname, email, password } = req.body;
+    const { name, surname, email, password } = req.body;
     const hashedPassword = md5(password); // Хеширование пароля MD5
-    const user = [
-      {
-        userName,
-        userSurname,
-        email,
-        password: hashedPassword,
-      },
-    ];
+    const user = await database.getLoginUser(email);
 
     if (user.length > 0) {
-      return res.json({
-        success: true,
-        user,
+      // console.log("user from login", user);
+      console.log("Пользователь из DB =>", user[0].email);
+      return res.status(409).json({
+        success: false,
+        message: "Такой email уже существует.",
       });
     } else {
-      return res.status(409).json({ error: "Пользователь уже существует" });
+      const newUser = await database.registerUser(
+        name,
+        surname,
+        email,
+        hashedPassword
+      );
+      console.log(newUser);
+      return res.json({
+        message: "Регистрация прошла успешно!",
+        newUser,
+      });
     }
   } catch (error) {
     res.status(500).json({ error: "Ошибка сервера" });
@@ -51,11 +57,10 @@ app.post("/register", (req, res) => {
 // Роут для аутентификации(LOGIN) пользователя
 app.post("/login", async (req, res) => {
   try {
-    const { fullName, email, password } = req.body;
-    // TODO: Создать запрос на сервер
-    const user = await database.getLoginUser(fullName, email, password);
-
-    if (user) {
+    const { email } = req.body;
+    const user = await database.getLoginUser(email);
+    // console.log("userLogin", user);
+    if (user.length > 0) {
       return res.json({
         success: true,
         user,
@@ -79,24 +84,23 @@ app.post("/login", async (req, res) => {
 app.get("/users", async (req, res) => {
   try {
     const users = await database.getUsers();
-    console.log("users => ", users);
-
-    if (users) {
-      res.json({
+    console.log(users);
+    if (users.length > 0) {
+      return res.json({
         success: true,
         users,
       });
     } else {
-      res.status(204).json({
+      return res.status(404).json({
         success: false,
-        message: "No Content",
+        message: "Not Found",
       });
     }
   } catch (error) {
     console.log(error);
-    res.status(404).json({
+    res.status(500).json({
       success: false,
-      message: "Not Found",
+      message: "Server Error",
     });
     throw error;
   }
