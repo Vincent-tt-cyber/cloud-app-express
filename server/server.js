@@ -27,12 +27,12 @@ app.post("/register", async (req, res) => {
   try {
     const { name, surname, email, password } = req.body;
     const hashedPassword = md5(password); // Хеширование пароля MD5
-    console.log(hashedPassword);
+    // console.log(hashedPassword);
     const user = await database.getLoginUser(email, hashedPassword);
 
     if (user.length > 0) {
       // console.log("user from login", user);
-      console.log("Пользователь из DB =>", user);
+      // console.log("Пользователь из DB =>", user);
       return res.status(409).json({
         success: false,
         message: "Такой email уже существует.",
