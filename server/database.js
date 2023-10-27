@@ -29,7 +29,7 @@ module.exports.registerUser = async (name, surname, email, password) => {
       name,
       surname,
       email,
-      password, 
+      password,
     ]);
     return rows;
   } catch (error) {
@@ -38,10 +38,11 @@ module.exports.registerUser = async (name, surname, email, password) => {
 };
 
 // Проверка пользоателя на авторизацию (имеется ли в БД)
-module.exports.getLoginUser = async (email) => {
+module.exports.getLoginUser = async (email, password) => {
   try {
-    const getUserLoginQuery = "SELECT * FROM `users` WHERE email = ?";
-    let [rows] = await poolPromise.query(getUserLoginQuery, [email]);
+    const getUserLoginQuery =
+      "SELECT * FROM `users` WHERE email = ? AND password = ?";
+    let [rows] = await poolPromise.query(getUserLoginQuery, [email, password]);
     // console.log("rows => ", rows);
     return rows;
   } catch (error) {

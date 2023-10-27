@@ -27,11 +27,12 @@ app.post("/register", async (req, res) => {
   try {
     const { name, surname, email, password } = req.body;
     const hashedPassword = md5(password); // Хеширование пароля MD5
-    const user = await database.getLoginUser(email);
+    console.log(hashedPassword);
+    const user = await database.getLoginUser(email, hashedPassword);
 
     if (user.length > 0) {
       // console.log("user from login", user);
-      console.log("Пользователь из DB =>", user[0].email);
+      console.log("Пользователь из DB =>", user);
       return res.status(409).json({
         success: false,
         message: "Такой email уже существует.",
@@ -46,7 +47,12 @@ app.post("/register", async (req, res) => {
       console.log(newUser);
       return res.json({
         message: "Регистрация прошла успешно!",
-        newUser,
+        user: {
+          id: newUser.insertId,
+          name,
+          surname,
+          email,
+        },
       });
     }
   } catch (error) {
@@ -57,8 +63,9 @@ app.post("/register", async (req, res) => {
 // Роут для аутентификации(LOGIN) пользователя
 app.post("/login", async (req, res) => {
   try {
-    const { email } = req.body;
-    const user = await database.getLoginUser(email);
+    const { email, password } = req.body;
+    const hashedPassword = md5(password);
+    const user = await database.getLoginUser(email, hashedPassword);
     // console.log("userLogin", user);
     if (user.length > 0) {
       return res.json({
