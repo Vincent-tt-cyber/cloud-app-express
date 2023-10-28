@@ -1,16 +1,19 @@
 import React from "react";
+import styles from "./AuthForm.module.scss";
 
 const AuthForm = ({ type = "login" }) => {
-  const handleSubmit = () => {};
+  const handleSubmit = (e) => {
+    e.preventDefault();
+  };
   return (
     <>
-      <form>
-        <div>
-          <input type="text" placeholder="Name" />
-          <input type="text" placeholder="Surname" />
-          <input type="text" placeholder="Email" />
+      <form onSubmit={handleSubmit} className={styles["form"]}>
+        <div className={styles["inputs-row"]}>
+          <input type="text" placeholder="Name" required />
+          <input type="text" placeholder="Surname" required />
+          <input type="text" placeholder="Email" required />
+          <input type="password" placeholder="Password" required />
         </div>
-        <input type="text" placeholder="Password" />
         <button>{type == "login" ? "Войти" : "Зарегистрироваться"}</button>
       </form>
     </>

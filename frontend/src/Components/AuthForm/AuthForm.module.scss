@@ -1,0 +1,17 @@
+.form {
+    background-color: #3ccc;
+    max-width: 500px;
+
+    padding: 30px;
+    .inputs-row {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        input {
+            border-radius: 5px;
+            padding: 10px 20px;
+            width: 100%;
+            margin: 5px 0;
+        }
+    }
+}

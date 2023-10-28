@@ -13,14 +13,31 @@ app.use(cors());
 
 const PORT = 3000;
 
-/* 
-  TODO: 
-  1 - Создать запрос на регистрацию пользователя в БД.
-  2 - СОздать JWT-токен для пользователей при авторизации.
-  3 - Создать приватный роутинг для проверки JWT-токена.
-  4 - Проверка приватного роутинга.
-
-*/
+// Роут на удаление пользователя
+app.delete("/users/:id", async (req, res) => {
+  try {
+    const userId = req.params.id;
+    const user = await database.deleteUser(userId);
+    console.log("user => ", user);
+    if (user.affectedRows > 0) {
+      return res.json({
+        success: true,
+        message: `Пользователь c id:${userId} был удален`,
+      });
+    } else {
+      return res.status(409).json({
+        success: true,
+        message: `Пользователь c id:${userId} не был удален`,
+      });
+    }
+  } catch (error) {
+    console.log(error);
+    res.status(404).json({
+      success: false,
+      message: "Not Found",
+    });
+  }
+});
 
 // Роут на регистрацию нового пользователя
 app.post("/register", async (req, res) => {
@@ -44,7 +61,7 @@ app.post("/register", async (req, res) => {
         email,
         hashedPassword
       );
-      console.log(newUser);
+      // console.log(newUser);
       return res.json({
         message: "Регистрация прошла успешно!",
         user: {
@@ -91,7 +108,7 @@ app.post("/login", async (req, res) => {
 app.get("/users", async (req, res) => {
   try {
     const users = await database.getUsers();
-    console.log(users);
+    // console.log(users);
     if (users.length > 0) {
       return res.json({
         success: true,

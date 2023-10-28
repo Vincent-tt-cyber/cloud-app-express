@@ -49,3 +49,15 @@ module.exports.getLoginUser = async (email, password) => {
     return error;
   }
 };
+
+// Удаление пользователя из БД
+module.exports.deleteUser = async (id) => {
+  try {
+    const deleteUserQuery = "DELETE FROM `users` WHERE `id` = ?";
+    let [rows] = await poolPromise.query(deleteUserQuery, [id]);
+    return rows;
+  } catch (error) { 
+    console.log(error);
+    throw error;
+  }
+};
