@@ -20,6 +20,18 @@ module.exports.getUsers = async () => {
   }
 };
 
+// Получение пользователя по ID
+module.exports.getUserById = async (id) => {
+  try {
+    const getUserByIdQuery = "SELECT * FROM `users` WHERE `id` = ?";
+    const [rows] = await poolPromise.query(getUserByIdQuery, [id]);
+    return rows;  
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+};
+
 // Регистрация пользователя
 module.exports.registerUser = async (name, surname, email, password) => {
   try {
@@ -56,7 +68,7 @@ module.exports.deleteUser = async (id) => {
     const deleteUserQuery = "DELETE FROM `users` WHERE `id` = ?";
     let [rows] = await poolPromise.query(deleteUserQuery, [id]);
     return rows;
-  } catch (error) { 
+  } catch (error) {
     console.log(error);
     throw error;
   }

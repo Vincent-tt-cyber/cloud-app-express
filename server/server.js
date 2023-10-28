@@ -2,23 +2,50 @@ const express = require("express");
 const database = require("./database");
 const app = express();
 const cookieParser = require("cookie-parser");
+const cors = require("cors");
 
 const jwt = require("jsonwebtoken");
 const md5 = require("md5");
-const cors = require("cors");
 
 app.use(express.json());
 app.use(cookieParser());
 app.use(cors());
 
 const PORT = 3000;
+const JWT_SECRET = "vincent";
+
+// Функция создания JWT-токена
+const createToken = (user) => {
+  return jwt.sign(user, JWT_SECRET);
+};
 
 // Роут на удаление пользователя
 app.delete("/users/:id", async (req, res) => {
+  // Провекра наличия авторизационного заголовка с JWT-токеном
+  console.log(req.headers);
+  const token = req.headers.authorization;
+
+  if (!token) {
+    res.status(401).json({
+      success: false,
+      message: "Не авторизован",
+    });
+  }
   try {
+    const decodedToken = jwt.verify(token, JWT_SECRET);
     const userId = req.params.id;
+    console.log("decodedToken", decodedToken);
+
+    if (decodedToken.id !== userId) {
+      return res.status(403).json({
+        success: false,
+        message: "Доступ запрещен!",
+      });
+    }
+
     const user = await database.deleteUser(userId);
     console.log("user => ", user);
+
     if (user.affectedRows > 0) {
       return res.json({
         success: true,
@@ -31,6 +58,13 @@ app.delete("/users/:id", async (req, res) => {
       });
     }
   } catch (error) {
+    // Если ошибка токена
+    if (error.name === "JsonWebTokenError") {
+      return res.status(401).json({
+        success: false,
+        message: "Неверный JWT-токен",
+      });
+    }
     console.log(error);
     res.status(404).json({
       success: false,
@@ -61,7 +95,16 @@ app.post("/register", async (req, res) => {
         email,
         hashedPassword
       );
-      // console.log(newUser);
+
+      const token = createToken({ id: newUser.insertId });
+      console.log("token =>", token);
+
+      res.cookie("token", token, {
+        httpOnly: true,
+        // Раскомментируйте, если используете HTTPS
+        // secure: true
+      });
+
       return res.json({
         message: "Регистрация прошла успешно!",
         user: {
@@ -85,6 +128,14 @@ app.post("/login", async (req, res) => {
     const user = await database.getLoginUser(email, hashedPassword);
     // console.log("userLogin", user);
     if (user.length > 0) {
+      const token = createToken({ id: user[0].id });
+
+      res.cookie("token", token, {
+        httpOnly: true,
+        // Раскомментируйте, если используете HTTPS
+        // secure: true
+      });
+
       return res.json({
         success: true,
         user,
@@ -100,6 +151,51 @@ app.post("/login", async (req, res) => {
     res.status(404).json({
       success: false,
       message: "Not Found",
+    });
+  }
+});
+
+// Роути для проверки авторизации пользователя
+app.get("/check-auth/:id", async (req, res) => {
+  try {
+    // Проверка наличия авторизационной куки
+    const token = req.cookies.token;
+    // console.log(token);
+
+    if (!token) {
+      return res.json({
+        success: false,
+        message: "Не авторизован!",
+      });
+    }
+
+    const decodedToken = jwt.verify(token, JWT_SECRET);
+    // console.log("decodedToken =>", decodedToken);
+    const user = await database.getUserById(decodedToken.id);
+    console.log("user check => ", user);
+
+    if (user) {
+      res.json({
+        success: true,
+        user,
+      });
+    } else {
+      return res.json({
+        success: false,
+        message: "Не авторизован!",
+      });
+    }
+  } catch (error) {
+    if (error.name === "JsonWebTokenError") {
+      return res.json({
+        success: false,
+        message: "Неверный JWT-токен",
+      });
+    }
+    console.log(error);
+    res.status(500).json({
+      success: false,
+      message: "Ошибка сервера",
     });
   }
 });
