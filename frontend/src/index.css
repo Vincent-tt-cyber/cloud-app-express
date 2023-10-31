@@ -16,3 +16,10 @@ body {
   font-weight: 400;
   line-height: normal;
 }
+
+.app {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
